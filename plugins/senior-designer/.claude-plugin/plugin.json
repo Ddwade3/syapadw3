@@ -1,0 +1,8 @@
+{
+  "name": "senior-designer",
+  "description": "Сеньор продуктовый дизайнер для Claude Code: процесс (бриф → токены → референсы → направления → сборка → QA → критик), правила в цифрах, автопроверка макетов в Figma, агенты критика и генерации картинок, память решений арт-директора.",
+  "author": {
+    "name": "Sergey (syapadw3)"
+  },
+  "keywords": ["design", "ui", "ux", "figma", "landing", "product-design", "qa"]
+}

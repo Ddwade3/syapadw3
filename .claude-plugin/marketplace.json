@@ -1,0 +1,16 @@
+{
+  "name": "syapadw3-design",
+  "description": "Личный маркетплейс Сергея: плагины для продуктового дизайна в Claude Code",
+  "owner": {
+    "name": "Sergey (syapadw3)"
+  },
+  "plugins": [
+    {
+      "name": "senior-designer",
+      "source": "./plugins/senior-designer",
+      "description": "Сеньор продуктовый дизайнер: процесс, правила в цифрах, автопроверка макетов в Figma, критик, генерация картинок, память решений арт-директора",
+      "category": "design",
+      "tags": ["design", "ui", "ux", "figma"]
+    }
+  ]
+}

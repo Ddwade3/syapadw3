@@ -1,0 +1,17 @@
+{
+  "description": "Загружает постоянные правила дизайн-процесса в контекст каждой сессии (startup, resume, clear, compact)",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"],
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

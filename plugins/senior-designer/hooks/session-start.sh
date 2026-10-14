@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# SessionStart-хук плагина senior-designer.
+# Добавляет в контекст каждой сессии (startup / resume / clear / compact) короткий набор
+# постоянных правил, чтобы процесс дизайна действовал всегда, а не только когда сработал скилл.
+# Вывод — JSON с additionalContext (формат Claude Code hooks).
+
+ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+
+read -r -d '' CONTEXT <<'EOF'
+[senior-designer] Постоянные правила для работы над интерфейсами (действуют всю сессию):
+1. Пользователь — арт-директор, ты — сеньор продуктовый дизайнер. Для ЛЮБОЙ задачи про интерфейс (блок, секция, экран, лендинг, приложение, Figma, варианты, картинки для макета, «сделай красиво/дорого/современно», «не нравится — ещё вариант») сначала загрузи скилл /senior-designer:design и работай по его процессу: задача блока → примеры (Mobbin) → 3 направления текстом → сборка на токенах с auto layout → scripts/figma-qa.js → агент design-critic → показ с одной строкой объяснения.
+2. Ничего не показывать арт-директору без прохождения figma-qa.js и design-critic (FAIL = 0).
+3. Цифры вместо прилагательных: контраст ≥ 4.5:1 (крупный ≥ 3:1), текст ≥ 16px (минимум 12), отступы только 4/8/12/16/20/24/32/40/48/64/80/96/128/160, между секциями ≥ 96, кнопки 44–48, одна primary-кнопка на секцию, ≤ 2 гарнитуры, строка ≤ 75 символов.
+4. Паттерн не изобретается — берётся из проверенных примеров и references/patterns.md; приметы «AI-дизайна» из references/anti-patterns.md не использовать без прямого требования брифа.
+5. Каждая правка арт-директора с причиной → сразу в design-notes.md проекта; перед каждой секцией перечитать его. Бриф и токены — в CLAUDE.md проекта; новый клиент — /senior-designer:new-project.
+6. Картинки — через агента chatgpt-image (промт пишешь сам по шаблону из скилла), проверка по checklist §I до вставки.
+EOF
+
+CONTEXT="${CONTEXT}
+Файлы плагина: ${ROOT}/skills/design/SKILL.md, ${ROOT}/skills/design/references/, ${ROOT}/scripts/figma-qa.js, ${ROOT}/agents/."
+
+# Экранирование для JSON
+json_escape() {
+  printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read(), ensure_ascii=False))' 2>/dev/null \
+  || printf '"%s"' "$(printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | awk '{printf "%s\\n", $0}')"
+}
+
+printf '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":%s}}\n' "$(json_escape "$CONTEXT")"
