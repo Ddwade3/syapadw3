@@ -1,10 +1,11 @@
 /*
  * figma-qa.js — автоматическая проверка секции/экрана в Figma.
  *
- * Выполняется в контексте Figma Plugin API (через Bridge или use_figma).
- * Код написан как скрипт с top-level await и `return` в конце (стиль use_figma).
- * Если ваш Bridge не поддерживает top-level return — оберните тело в async-функцию
- * и отправьте результат через свой канал (например, figma.ui.postMessage).
+ * Выполняется в контексте Figma Plugin API: через Claude Bridge (`run.sh figma-qa.js`,
+ * скрипт = тело async-функции с `figma`) или через use_figma. Top-level await и `return`
+ * в конце. Возвращает JSON-строку (как требует Bridge); use_figma её тоже принимает.
+ * Через Bridge PNG снимать помощником snap(), EXPORT_PNG оставить false — base64
+ * не влезет в лимит вывода ~64 КБ.
  *
  * Как запускать (Claude делает это сам на шаге 5 процесса `design`):
  *   1. Подставить id фрейма секции в ROOT_ID (или выделить фрейм в Figma и оставить '').
@@ -40,7 +41,8 @@
  */
 
 const ROOT_ID = ''            // id фрейма секции; '' = текущее выделение
-const EXPORT_PNG = false      // true → в отчёт добавится png_base64 (PNG 2×)
+const EXPORT_PNG = false      // true → в отчёт добавится png_base64 (PNG 2×); через Bridge не включать
+const MAX_ISSUES = 150        // защита от обрезания вывода (~64 КБ в Bridge)
 const SPACING_SCALE = [0, 2, 4, 6, 8, 10, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 72, 80, 96, 112, 120, 128, 160, 200, 240]
 const MIN_FONT = 12
 const SMALL_FONT = 14
@@ -358,16 +360,18 @@ const order = { FAIL: 0, WARN: 1, INFO: 2 }
 issues.sort((a, b) => order[a.level] - order[b.level])
 const counts = { FAIL: 0, WARN: 0, INFO: 0 }
 for (const i of issues) counts[i.level]++
+const truncated = Math.max(0, issues.length - MAX_ISSUES)
 const result = {
   verdict: counts.FAIL ? 'FAIL' : 'PASS',
   root: { id: root.id, name: root.name, width: rootBox ? Math.round(rootBox.width) : null, height: rootBox ? Math.round(rootBox.height) : null },
   summary: `FAIL ${counts.FAIL} · WARN ${counts.WARN} · INFO ${counts.INFO} · текстов ${stats.texts} · гарнитуры ${families.join(', ') || '—'} · размеры ${sizeList.join('/') || '—'}`,
   counts,
-  issues,
+  truncated,
+  issues: issues.slice(0, MAX_ISSUES),
   stats: { nodes: stats.nodes, texts: stats.texts, fontFamilies: stats.fontFamilies, fontSizes: stats.fontSizes },
 }
 if (EXPORT_PNG && 'exportAsync' in root) {
   const bytes = await root.exportAsync({ format: 'PNG', constraint: { type: 'SCALE', value: 2 } })
   result.png_base64 = figma.base64Encode(bytes)
 }
-return result
+return JSON.stringify(result)
