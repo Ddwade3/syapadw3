@@ -289,7 +289,7 @@ for (const t of texts) {
       const fg = alpha < 1 ? composite(tf.color, alpha, bg.color) : tf.color
       const ratio = contrast(fg, bg.color)
       const weight = Math.max(...segs.map(s => (typeof s.fontWeight === 'number' ? s.fontWeight : 400)))
-      const large = minSize != null && (minSize >= 24 || (minSize >= 18.66 && weight >= 700))
+      const large = minSize != null && (minSize >= 24 || (minSize >= 18.5 && weight >= 700)) // WCAG: 18pt = 24px; 14pt bold ≈ 18.5px
       const need = large ? 3 : 4.5
       if (ratio < need) {
         push('FAIL', 'contrast', t, `${toHex(fg)} на ${toHex(bg.color)} = ${r1(ratio)}:1 (нужно ≥ ${need}:1)`, 'Затемнить/осветлить текст или фон до нормы; серый второстепенный текст на белом — не светлее #767676')
